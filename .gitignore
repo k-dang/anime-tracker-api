@@ -1,0 +1,8 @@
+# config
+.vscode
+
+# files
+*.pyc
+config.py
+.env
+query.py
