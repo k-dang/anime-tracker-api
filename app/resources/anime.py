@@ -9,8 +9,22 @@ anime_schema = AnimeSchema(many=True)
 # /anime/id
 class Anime(Resource):
     def get(self, id):
-        anime = AnimeModel.query.filter_by(id=id)
-        return anime_schema.jsonify(anime)
+        anime = AnimeModel.query.get(id)
+        return anime_schema.jsonify(anime, many=False)
+
+    def put(self, id):
+        anime = AnimeModel.query.get(id)
+        data = request.get_json()
+        errors = {}
+        for field in data:
+            if getattr(anime, field):
+                setattr(anime, field, data[field])
+            else:
+                errors[field] = "field not in model"
+        if errors:
+            return jsonify({'errors':errors})
+        db.session.commit()
+        return anime_schema.jsonify(anime, many=False)
 
 # /anime
 class AnimeList(Resource):
@@ -19,7 +33,8 @@ class AnimeList(Resource):
         page = query_params.get('page', 1)
         animes = AnimeModel.query.filter_by(season=query_params.get('season')).paginate(page=page, per_page=10).items
         result = anime_schema.dump(animes)
-
+        for r in result.data:
+            r['episodes'] = [datetime.fromtimestamp(ep) for ep in r['episodes']]
         return jsonify(result.data)
 
     def post(self):
@@ -30,7 +45,7 @@ class AnimeList(Resource):
                 ep_epochs = [asn['airingAt'] for asn in i['airingSchedule']['nodes']]
                 episode_nodes = [datetime.fromtimestamp(ep) for ep in ep_epochs]
                 anime_objs.append(AnimeModel(
-                    title=i['title']['englidddsh'],
+                    title=i['title']['english'],
                     title_alt=i['title']['romaji'],
                     type=i.get('type', 'ANIME'),
                     start_date=episode_nodes[0],
@@ -48,7 +63,8 @@ class AnimeList(Resource):
             db.session.rollback()
             return {
                 'status': 'failed',
-                'message': 'Failed to add any anime'
+                'message': 'Failed to add any anime',
+                'exception': str(e)
             }
 
         return {
