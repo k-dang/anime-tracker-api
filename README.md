@@ -8,3 +8,5 @@ prod
 rename config_sample.py to config.py
 
 flask run
+
+flask db upgrade
