@@ -30,7 +30,7 @@ def create_app(test_config=None):
     api.add_resource(Anime, '/api/anime/<int:id>')
     api.add_resource(AnimeList, '/api/anime')
 
-    # from app.resources.query import QueryQL
-    # api.add_resource(QueryQL, '/api/queryme')
+    from app.resources.query import QueryQL
+    api.add_resource(QueryQL, '/api/queryme')
 
     return app

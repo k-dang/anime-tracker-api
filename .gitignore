@@ -3,6 +3,5 @@
 
 # files
 *.pyc
-config.py
 .env
-query.py
+config.dev.py
